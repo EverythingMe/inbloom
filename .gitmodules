@@ -1,0 +1,3 @@
+[submodule "vendor/libbloom"]
+	path = vendor/libbloom
+	url = https://github.com/jvirkki/libbloom
