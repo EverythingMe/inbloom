@@ -1,4 +1,5 @@
 #include <Python.h>
+#include <arpa/inet.h>
 #include "../vendor/libbloom/bloom.h"
 #include "crc32.c"
 
@@ -54,12 +55,32 @@ instantiate_filter(uint32_t cardinality, uint16_t error_rate, const char *data, 
     return obj;
 }
 
-static uint16_t compute_checksum(const char *buf, size_t len)
+/* helpers */
+static uint16_t
+compute_checksum(const char *buf, size_t len)
 {
     uint32_t checksum32 = crc32(0, buf, len);
     return (checksum32 & 0xFFFF) ^ (checksum32 >> 16);
 }
 
+static uint16_t
+read_uint16(const char **buffer)
+{
+    uint16_t ret = ntohs(*((uint16_t *)*buffer));
+    *buffer += sizeof(uint16_t);
+    return ret;
+}
+
+static uint32_t
+read_uint32(const char **buffer)
+{
+    uint32_t ret = ntohl(*((uint32_t *)*buffer));
+    *buffer += sizeof(uint32_t);
+    return ret;
+}
+
+
+/* serialization */
 static PyObject *
 load(PyObject *self, PyObject *args)
 {
@@ -69,15 +90,18 @@ load(PyObject *self, PyObject *args)
         return NULL;
     }
 
-    const struct serialized_filter_header *header = (const struct serialized_filter_header *)buffer;
-    const char *data = buffer + sizeof(struct serialized_filter_header);
+    struct serialized_filter_header header;
+    header.checksum = read_uint16(&buffer);
+    header.error_rate = read_uint16(&buffer);
+    header.cardinality = read_uint32(&buffer);
+    const char *data = buffer;
     size_t datalen = (int)buflen - sizeof(struct serialized_filter_header);
     uint16_t expected_checksum = compute_checksum(data, datalen);
-    if (expected_checksum != header->checksum) {
+    if (expected_checksum != header.checksum) {
         PyErr_SetString(InBloomError, "checksum mismatch");
         return NULL;
     }
-    return instantiate_filter(header->cardinality, header->error_rate, data, datalen);
+    return instantiate_filter(header.cardinality, header.error_rate, data, datalen);
 }
 
 static PyObject *
@@ -89,7 +113,7 @@ dump(PyObject *self, PyObject *args)
     }
     uint16_t checksum = compute_checksum((const char *)filter->_bloom_struct->bf, filter->_bloom_struct->bytes);
 
-    struct serialized_filter_header header = {checksum, 1.0 / filter->_bloom_struct->error, filter->_bloom_struct->entries};
+    struct serialized_filter_header header = {htons(checksum), htons(1.0 / filter->_bloom_struct->error), htonl(filter->_bloom_struct->entries)};
     PyObject *serial_header = PyString_FromStringAndSize((const char *)&header, sizeof(struct serialized_filter_header));
     PyObject *serial_data = PyString_FromStringAndSize((const char *)filter->_bloom_struct->bf, filter->_bloom_struct->bytes);
     PyString_Concat(&serial_header, serial_data);
@@ -104,6 +128,7 @@ static PyMethodDef module_methods[] = {
     {NULL}
 };
 
+/* Filter methods */
 static PyObject *
 Filter_add(Filter *self, PyObject *args)
 {
