@@ -1,2 +1,3 @@
 include VERSION
 graft vendor
+include inbloom/crc32.c
