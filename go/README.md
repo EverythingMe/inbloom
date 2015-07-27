@@ -39,6 +39,14 @@ metadata, you do not need to specify them.
 
 If the data is corrupt or the buffer is not complete, we return an error
 
+#### func  UnmarshalBase64
+
+```go
+func UnmarshalBase64(b64 string) (*BloomFilter, error)
+```
+UnmarshalBase64 is a convenience function that unmarshals a filter that has been
+encoded into a url parameter
+
 #### func (*BloomFilter) Add
 
 ```go
@@ -70,3 +78,11 @@ rate, cardinality and a checksum. This data can be passed to another inbloom
 filter over the network, and thus the other end can open the data without the
 user having to pass the filter size explicitly. See Unmarshal for reading these
 dumpss
+
+#### func (*BloomFilter) MarshalBase64
+
+```go
+func (f *BloomFilter) MarshalBase64() string
+```
+MarshalBase64 is a convenience method that dumps the filter's data to a base64
+encoded string, ready to be passed as an GET/POST parameter

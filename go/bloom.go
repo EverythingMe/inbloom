@@ -12,6 +12,7 @@ package inbloom
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -158,6 +159,24 @@ func (f *BloomFilter) Marshal() []byte {
 	binary.Write(buf, binary.BigEndian, uint32(f.entries))
 	buf.Write(f.bf)
 	return buf.Bytes()
+}
+
+// MarshalBase64 is a convenience method that dumps the filter's data to a base64 encoded string,
+// ready to be passed as an GET/POST parameter
+func (f *BloomFilter) MarshalBase64() string {
+	return base64.URLEncoding.EncodeToString(f.Marshal())
+}
+
+// UnmarshalBase64 is a convenience function that unmarshals a filter that has been encoded into
+// a url parameter
+func UnmarshalBase64(b64 string) (*BloomFilter, error) {
+
+	if b, err := base64.URLEncoding.DecodeString(b64); err != nil {
+		return nil, fmt.Errorf("bloom: could not decode base64 data: %s", err)
+	} else {
+		return Unmarshal(b)
+	}
+
 }
 
 // Unmarshal reads a binary dump of an inbloom filter with its header, and returns the resulting filter.
