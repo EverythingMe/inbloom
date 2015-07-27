@@ -1,6 +1,6 @@
 # inbloom
 --
-    import "github.com/EverythingMe/inbloom-go"
+    import "github.com/EverythingMe/inbloom/go"
 
 Package inbloom implements a portable bloom filter that can export and import
 data to and from implementations of the same library in different languages.
@@ -28,16 +28,16 @@ NewFilter creates an empty bloom filter, with the given expected number of
 entries, and desired error rate. The number of hash functions and size of the
 filter are calculated from these 2 parameters
 
-#### func  NewFilterFromData
+#### func  Unmarshal
 
 ```go
-func NewFilterFromData(data []byte, entries int, errorRate float64) (*BloomFilter, error)
+func Unmarshal(data []byte) (*BloomFilter, error)
 ```
-NewFilterFromData creates a bloom filter from an existing data buffer, created
-by another instance of this library (probably in another language).
+Unmarshal reads a binary dump of an inbloom filter with its header, and returns
+the resulting filter. Since this is a dump containing size and precisin
+metadata, you do not need to specify them.
 
-If the length of the data does not fit the number of entries and error rate, we
-return an error. If data is nil we allocate a new filter
+If the data is corrupt or the buffer is not complete, we return an error
 
 #### func (*BloomFilter) Add
 
@@ -59,3 +59,14 @@ Contains returns true if a key exists in the filter
 func (f *BloomFilter) Len() int
 ```
 Len returns the number of BYTES in the filter
+
+#### func (*BloomFilter) Marshal
+
+```go
+func (f *BloomFilter) Marshal() []byte
+```
+Marshal dumps the filter to a byte array, with a header containing the error
+rate, cardinality and a checksum. This data can be passed to another inbloom
+filter over the network, and thus the other end can open the data without the
+user having to pass the filter size explicitly. See Unmarshal for reading these
+dumpss
