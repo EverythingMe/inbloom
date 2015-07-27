@@ -90,6 +90,11 @@ load(PyObject *self, PyObject *args)
         return NULL;
     }
 
+    if ((int)buflen < sizeof(struct serialized_filter_header) + 1) {
+        PyErr_SetString(InBloomError, "incomplete payload");
+        return NULL;
+    }
+
     struct serialized_filter_header header;
     header.checksum = read_uint16(&buffer);
     header.error_rate = read_uint16(&buffer);
