@@ -20,7 +20,7 @@ import (
 	"math"
 	"unsafe"
 
-	"github.com/EverythingMe/inbloom/go/gomurmur"
+	"github.com/EverythingMe/inbloom/go/internal/gomurmur"
 )
 
 const denom = 0.480453013918201

@@ -1,6 +1,6 @@
 # inbloom
 --
-    import "github.com/EverythingMe/inbloom/go"
+    import "github.com/EverythingMe/inbloom/go/inbloom"
 
 Package inbloom implements a portable bloom filter that can export and import
 data to and from implementations of the same library in different languages.
