@@ -31,5 +31,5 @@ import inbloom
 import binascii
 
 payload = '620d006400000014000000000020001000080000000000002000100008000400'
-assert binascii.hexlify(inbloom.dump(inbloom.load(binascii.unhexlify()))) == payload
+assert binascii.hexlify(inbloom.dump(inbloom.load(binascii.unhexlify(payload)))) == payload
 ```
