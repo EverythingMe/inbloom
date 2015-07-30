@@ -18,11 +18,11 @@ Having such a library allows us to send filters between clients and any server c
 So we decided to build on top of an existing simple implementation in C called libbloom (https://github.com/jvirkki/libbloom) and expand it to all 3 langauges.
 We chose to use the original C implementation for the Python version only, and **translated the code to pure Java and Go, without calling any C code**.
 We chose this approach because the original C code is fairly short and straightforward, so porting it to other languages was a simple task;
-and voiding calling C from Java and Go simplifies the build process and executable size in both cases.
+and avoiding calling C from Java and Go simplifies and shortens the build process, and reduces executable size - in both cases.
 
 ## Filter headers
 
-InBloom provides utilities for serializing / deserializing Bloom filters so they can be sent over network.
+InBloom provides utilities for serializing / deserializing Bloom filters so they can be sent over the network.
 Since when you create a Bloom filter, you need to initialize it with parameters of expected cardinality and false positive rates,
 they are also needed to read a filter written by another party. Instead of choosing fixed parameters in our configurations, we opted for encoding
 those parameters as a header when serizlizing the filter. We've added a 16 bit checksum for good measure as part of the header.
