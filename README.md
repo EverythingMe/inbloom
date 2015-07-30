@@ -33,7 +33,7 @@ those parameters as a header when serizlizing the filter. We've added a 16 bit c
 | ------------- |:-------------:| -----:|
 | checksum      | ushort | 16 |
 | errorRate (1/N)| ushort | 16 |
-| cardinality   | int     |   21 |
+| cardinality   | int     |   32 |
 | data          | byte[]  | ? |
 
 
