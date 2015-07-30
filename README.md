@@ -2,6 +2,8 @@
 
 _inbloom_ - a cross language Bloom filter implementation (https://en.wikipedia.org/wiki/Bloom_filter).
 
+![inbloom](https://raw.githubusercontent.com/EverythingMe/inbloom/master/inbloom.png)
+
 ## What's a Bloom Filter?
 A Bloom filter is a probabalistic data structure which provides an extremely space-efficient method of representing large sets.
 It can have false positives but never false negatives which means a query returns either "possibly in set" or "definitely not in set".
