@@ -1,4 +1,8 @@
-version '1.0-SNAPSHOT'
+plugins {
+    id "com.jfrog.bintray" version "1.2"
+}
+
+version '0.1'
 
 apply plugin: 'java'
 
@@ -8,6 +12,19 @@ repositories {
     mavenCentral()
 }
 
+
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.11'
+}
+
+bintray {
+    user = System.getenv('BINTRAY_USER')
+    key = System.getenv('BINTRAY_KEY')
+    pkg {
+        repo = 'generic'
+        name = 'inbloom'
+        userOrg = 'everythingme'
+        licenses = ['BSD']
+        vcsUrl = 'https://github.com/EverythingMe/inbloom'
+    }
 }
