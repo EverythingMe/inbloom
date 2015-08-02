@@ -5,6 +5,11 @@
 Package inbloom implements a portable bloom filter that can export and import
 data to and from implementations of the same library in different languages.
 
+## Installation
+```bash
+go get github.com/EverythingMe/inbloom/go/inbloom
+```
+
 ## Usage
 
 #### type BloomFilter
