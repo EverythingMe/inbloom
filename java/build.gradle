@@ -2,16 +2,18 @@ plugins {
     id "com.jfrog.bintray" version "1.2"
 }
 
+group = 'me.everything'
 version '0.1'
 
 apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
 sourceCompatibility = 1.5
 
 repositories {
     mavenCentral()
 }
-
 
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.11'
@@ -20,11 +22,41 @@ dependencies {
 bintray {
     user = System.getenv('BINTRAY_USER')
     key = System.getenv('BINTRAY_KEY')
+    publications = ['mavenJava']
     pkg {
         repo = 'generic'
         name = 'inbloom'
         userOrg = 'everythingme'
         licenses = ['BSD']
         vcsUrl = 'https://github.com/EverythingMe/inbloom'
+        publish = true
+        version {
+            name = '0.1'
+            desc = 'InBloom Library 0.1'
+            released  = new Date()
+            vcsTag = '0.1'
+        }
+    }
+}
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allSource
+    classifier = 'sources'
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from 'build/docs/javadoc'
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
+            groupId 'me.everything'
+            artifactId 'inbloom'
+        }
     }
 }
