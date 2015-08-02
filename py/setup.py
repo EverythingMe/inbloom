@@ -12,7 +12,7 @@ module = Extension('inbloom',
 setup(
     name='inbloom',
     author='EverythingMe',
-    description=contents('README'),
+    description=contents('README.rst'),
     version=contents('VERSION'),
     ext_modules=[module]
 )

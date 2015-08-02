@@ -123,6 +123,9 @@ fmt.Printf("%x\n", f.Marshal())
 
 #### Java
 ```java
+import me.everything.inbloom.BloomFilter;
+import me.everything.inbloom.BinAscii;  // Optional - for hex representation
+
 // The basics
 BloomFilter bf = new BloomFilter(20, 0.01);
 bf.add("foo");

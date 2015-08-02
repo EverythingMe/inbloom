@@ -1,12 +1,22 @@
 inbloom (Python)
 ================
 
+-  https://github.com/EverythingMe/inbloom/tree/master/py
+-  https://pypi.python.org/pypi/inbloom/
+
 Package inbloom implements a portable bloom filter that can export and
 import data to and from implementations of the same library in different
 languages.
 
 This implementation is a C extension which wraps libbloom
 (https://github.com/jvirkki/libbloom)
+
+Installation
+------------
+
+.. code:: bash
+
+    pip install inbloom
 
 Usage
 -----
@@ -29,7 +39,7 @@ Usage
     assert not bf2.contains("ghi")
 
 Serialization
-~~~~~~~~~~~~~
+'''''''''''''
 
 .. code:: python
 
