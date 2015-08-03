@@ -37,6 +37,34 @@ those parameters as a header when serizlizing the filter. We've added a 16 bit c
 | data          | byte[]  | ? |
 
 
+### Installation
+
+#### Python
+```bash
+pip install inbloom
+```
+
+#### Go
+```bash
+go get github.com/EverythingMe/inbloom/go/inbloom
+```
+
+#### Java
+
+Add the following lines to your build.gradle script.
+
+```groovy
+repositories {
+    jcenter {
+        url 'http://dl.bintray.com/everythingme/generic'
+    }
+}
+
+dependencies {
+    compile 'me.everything:inbloom:0.1'
+}
+```
+
 ### Example Usage
 
 #### Python
