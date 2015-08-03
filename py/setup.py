@@ -12,7 +12,10 @@ module = Extension('inbloom',
 setup(
     name='inbloom',
     author='EverythingMe',
-    description=contents('README.rst'),
+    description='Portable, cross language Bloom Fitler implementation, with compatible libraries in Java and Go',
+    long_description=contents('README.rst'),
     version=contents('VERSION'),
-    ext_modules=[module]
+    url='https://github.com/EverythingMe/inbloom',
+    ext_modules=[module],
+    license='BSD',
 )
