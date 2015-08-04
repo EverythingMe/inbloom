@@ -24,11 +24,12 @@ public class BloomFilter {
     // These fields are part of the public interface of this structure.
     // Client code may read these values if desired. Client code MUST NOT
     // modify any of these.
-    int entries;
-    double error;
-    int bits;
-    int bytes;
-    int hashes;
+    public int entries; 
+    public double error;
+    public int bits;
+    public int bytes;
+    public int hashes;
+    public static double errorPrecision = 0.000000001;
 
     // Fields below are private to the implementation. These may go away or
     // change incompatibly at any moment. Client code MUST NOT access or rely
@@ -59,7 +60,7 @@ public class BloomFilter {
      */
     public BloomFilter(byte []data, int entries, double error) throws RuntimeException
     {
-        if (entries < 1 || error == 0) {
+        if (entries < 1 || ( ( 1.0 <= error ) || ( error <= errorPrecision ) ) ) {
             throw new RuntimeException("Invalid params for bloom filter");
         }
 
