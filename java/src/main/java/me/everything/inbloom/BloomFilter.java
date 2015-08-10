@@ -24,12 +24,12 @@ public class BloomFilter {
     // These fields are part of the public interface of this structure.
     // Client code may read these values if desired. Client code MUST NOT
     // modify any of these.
-    public int entries; 
-    public double error;
-    public int bits;
-    public int bytes;
-    public int hashes;
-    public static double errorPrecision = 0.000000001;
+    protected final int entries; 
+    protected final double error;
+    protected final int bits;
+    protected final int bytes;
+    protected final int hashes;
+    protected final static double errorPrecision = 0.000000001;
 
     // Fields below are private to the implementation. These may go away or
     // change incompatibly at any moment. Client code MUST NOT access or rely
