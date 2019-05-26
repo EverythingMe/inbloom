@@ -161,17 +161,29 @@ func (f *BloomFilter) Marshal() []byte {
 	return buf.Bytes()
 }
 
-// MarshalBase64 is a convenience method that dumps the filter's data to a base64 encoded string,
-// ready to be passed as an GET/POST parameter
-func (f *BloomFilter) MarshalBase64() string {
-	return base64.URLEncoding.EncodeToString(f.Marshal())
+// MarshalBase64 is a convenience method that dumps the filter's data to a base64 encoded string.
+// By default uses URLEncoding which ready to be passed as a GET/POST parameter.
+// Pass an encoding param to use different encoding.
+func (f *BloomFilter) MarshalBase64(encoding ...*base64.Encoding) string {
+	if len(encoding) > 1 {
+		panic(fmt.Sprintf("Expected at most 1 encoding, got %d", len(encoding)))
+	} else if len(encoding) == 1 {
+		return encoding[0].EncodeToString(f.Marshal())
+	} else {
+		return base64.URLEncoding.EncodeToString(f.Marshal())
+	}
 }
 
-// UnmarshalBase64 is a convenience function that unmarshals a filter that has been encoded into
-// a url parameter
-func UnmarshalBase64(b64 string) (*BloomFilter, error) {
-
-	if b, err := base64.URLEncoding.DecodeString(b64); err != nil {
+// UnmarshalBase64 is a convenience function that unmarshals a filter that has been encoded into base64.
+// Uses URLEncoding by default, pass an encoding param to use different encoding.
+func UnmarshalBase64(b64 string, encoding ...*base64.Encoding) (*BloomFilter, error) {
+	selectedEncoding := base64.URLEncoding
+	if len(encoding) > 1 {
+		panic(fmt.Sprintf("Expected at most 1 encoding, got %d", len(encoding)))
+	} else if len(encoding) == 1 {
+		selectedEncoding = encoding[0]
+	}
+	if b, err := selectedEncoding.DecodeString(b64); err != nil {
 		return nil, fmt.Errorf("bloom: could not decode base64 data: %s", err)
 	} else {
 		return Unmarshal(b)

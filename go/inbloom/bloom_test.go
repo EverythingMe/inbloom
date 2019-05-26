@@ -1,6 +1,7 @@
 package inbloom
 
 import (
+	"encoding/base64"
 	"fmt"
 	"testing"
 )
@@ -93,6 +94,36 @@ func TestMarshal(t *testing.T) {
 		t.Log(err)
 	}
 
+}
+
+func TestBase64StdEncoding(t *testing.T) {
+	source := "j+gAZAAAAGQAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAIAAAAAEAAAAAAAAAAAAABAAAAAAAAAYAAAAAAACAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAQAAgAAAAAAAAAAAAAAAAAACBgAA="
+
+	f, err := UnmarshalBase64(source, base64.StdEncoding)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	marshaled := f.MarshalBase64(base64.StdEncoding)
+
+	if marshaled != source {
+		t.Fatal(fmt.Sprintf("MarshalBase64 differs from source: %s != %s", marshaled, source))
+	}
+}
+
+func TestBase64UrlEncoding(t *testing.T) {
+	source := "j-gAZAAAAGQAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAIAAAAAEAAAAAAAAAAAAABAAAAAAAAAYAAAAAAACAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAQAAgAAAAAAAAAAAAAAAAAACBgAA="
+
+	f, err := UnmarshalBase64(source)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	marshaled := f.MarshalBase64()
+
+	if marshaled != source {
+		t.Fatal(fmt.Sprintf("MarshalBase64 differs from source: %s != %s", marshaled, source))
+	}
 }
 
 func ExampleBloomFilter() {
