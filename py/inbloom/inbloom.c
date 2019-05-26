@@ -52,6 +52,7 @@ instantiate_filter(uint32_t cardinality, uint16_t error_rate, const char *data, 
         Py_DECREF(obj);
         obj = NULL;
     }
+    Py_DECREF(args);
     return obj;
 }
 
