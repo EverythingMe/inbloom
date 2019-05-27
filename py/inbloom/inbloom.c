@@ -123,6 +123,7 @@ dump(PyObject *self, PyObject *args)
     PyObject *serial_header = PyString_FromStringAndSize((const char *)&header, sizeof(struct serialized_filter_header));
     PyObject *serial_data = PyString_FromStringAndSize((const char *)filter->_bloom_struct->bf, filter->_bloom_struct->bytes);
     PyString_Concat(&serial_header, serial_data);
+    Py_DECREF(serial_data);
     return serial_header;
 }
 
