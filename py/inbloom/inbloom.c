@@ -258,14 +258,9 @@ PyInit_inbloom(void)
 
     m = PyModule_Create(&inbloom_mod_def);
     Py_INCREF(&FilterType);
-    if (PyModule_AddObject(m, "Filter", (PyObject *)&FilterType) != 0) {
-        printf("i b broke :(");
-    }
-
+    PyModule_AddObject(m, "Filter", (PyObject *)&FilterType) != 0;
     InBloomError = PyErr_NewException("inbloom.error", NULL, NULL);
     Py_INCREF(InBloomError);
-    if (PyModule_AddObject(m, "error", InBloomError) != 0) {
-        printf("i c broke :(");
-    }
+    PyModule_AddObject(m, "error", InBloomError) != 0 ;
     return m;
 }
