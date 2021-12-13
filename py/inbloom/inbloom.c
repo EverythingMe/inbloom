@@ -1,3 +1,4 @@
+#define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include <arpa/inet.h>
 #include "../vendor/libbloom/bloom.h"
@@ -11,8 +12,7 @@ typedef struct {
 } Filter;
 
 static PyTypeObject FilterType = {
-    PyObject_HEAD_INIT(NULL)
-    0,                          /*ob_size*/
+    PyVarObject_HEAD_INIT(&PyType_Type, 0)
     "inbloom.Filter",           /*tp_name*/
     sizeof(Filter),             /*tp_basicsize*/
     0,                          /*tp_itemsize*/
@@ -120,9 +120,9 @@ dump(PyObject *self, PyObject *args)
     uint16_t checksum = compute_checksum((const char *)filter->_bloom_struct->bf, filter->_bloom_struct->bytes);
 
     struct serialized_filter_header header = {htons(checksum), htons(1.0 / filter->_bloom_struct->error), htonl(filter->_bloom_struct->entries)};
-    PyObject *serial_header = PyString_FromStringAndSize((const char *)&header, sizeof(struct serialized_filter_header));
-    PyObject *serial_data = PyString_FromStringAndSize((const char *)filter->_bloom_struct->bf, filter->_bloom_struct->bytes);
-    PyString_Concat(&serial_header, serial_data);
+    PyObject *serial_header = PyBytes_FromStringAndSize((const char *)&header, sizeof(struct serialized_filter_header));
+    PyObject *serial_data = PyBytes_FromStringAndSize((const char *)filter->_bloom_struct->bf, filter->_bloom_struct->bytes);
+    PyBytes_Concat(&serial_header, serial_data);
     Py_DECREF(serial_data);
     return serial_header;
 }
@@ -167,7 +167,7 @@ Filter_check(Filter *self, PyObject *args)
 static PyObject *
 Filter_buffer(Filter *self, PyObject *args)
 {
-    return PyString_FromStringAndSize((const char *)self->_bloom_struct->bf, self->_bloom_struct->bytes);
+    return PyBytes_FromStringAndSize((const char *)self->_bloom_struct->bf, self->_bloom_struct->bytes);
 }
 
 static PyMethodDef Filter_methods[] = {
@@ -185,7 +185,7 @@ Filter_dealloc(Filter* self)
 {
     bloom_free(self->_bloom_struct);
     free(self->_bloom_struct);
-    self->ob_type->tp_free((PyObject*)self);
+    self->ob_base.ob_type->tp_free((PyObject*)self);
 }
 
 static PyObject *
@@ -198,7 +198,7 @@ Filter_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         self->_bloom_struct = (struct bloom *)malloc(sizeof(struct bloom));
         if (self->_bloom_struct == NULL)
             return PyErr_NoMemory();
-    }
+    } 
 
     return (PyObject *)self;
 }
@@ -235,22 +235,37 @@ Filter_init(Filter *self, PyObject *args, PyObject *kwargs)
 #ifndef PyMODINIT_FUNC
 #define PyMODINIT_FUND void
 #endif
-PyMODINIT_FUNC
-initinbloom(void)
+
+static struct PyModuleDef inbloom_mod_def =
 {
-    PyObject *m;
+    PyModuleDef_HEAD_INIT,
+    "inbloom",
+    module_docstring,
+    -1,
+    module_methods
+};
+
+PyMODINIT_FUNC
+PyInit_inbloom(void)
+{
+    PyObject *m=NULL;
     FilterType.tp_new = Filter_new;
     FilterType.tp_init = (initproc)Filter_init;
     FilterType.tp_methods = Filter_methods;
     FilterType.tp_dealloc = (destructor)Filter_dealloc;
     if (PyType_Ready(&FilterType) < 0)
-        return;
+        return m;
 
-    m = Py_InitModule3("inbloom", module_methods, module_docstring);
+    m = PyModule_Create(&inbloom_mod_def);
     Py_INCREF(&FilterType);
-    PyModule_AddObject(m, "Filter", (PyObject *)&FilterType);
+    if (PyModule_AddObject(m, "Filter", (PyObject *)&FilterType) != 0) {
+        printf("i b broke :(");
+    }
 
     InBloomError = PyErr_NewException("inbloom.error", NULL, NULL);
     Py_INCREF(InBloomError);
-    PyModule_AddObject(m, "error", InBloomError);
+    if (PyModule_AddObject(m, "error", InBloomError) != 0) {
+        printf("i c broke :(");
+    }
+    return m;
 }
