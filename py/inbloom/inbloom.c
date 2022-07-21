@@ -1,3 +1,4 @@
+#define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include <arpa/inet.h>
 #include "../vendor/libbloom/bloom.h"
@@ -10,9 +11,15 @@ typedef struct {
     struct bloom *_bloom_struct;
 } Filter;
 
+#if PY_MAJOR_VERSION >=3
+#define MY_PyObject_HEAD_INIT(p, ob_size) PyVarObject_HEAD_INIT(p, ob_size)
+#else
+#define MY_PyObject_HEAD_INIT(p, ob_size) PyObject_HEAD_INIT(p) \
+ob_size,
+#endif
+
 static PyTypeObject FilterType = {
-    PyObject_HEAD_INIT(NULL)
-    0,                          /*ob_size*/
+    MY_PyObject_HEAD_INIT(NULL, 0)
     "inbloom.Filter",           /*tp_name*/
     sizeof(Filter),             /*tp_basicsize*/
     0,                          /*tp_itemsize*/
@@ -43,10 +50,16 @@ struct serialized_filter_header {
 
 static PyObject *InBloomError;
 
+#if PY_MAJOR_VERSION >=3
+#define INSTANTIATE_ARGS_FORMAT "(idy#)"
+#else
+#define INSTANTIATE_ARGS_FORMAT "(ids#)"
+#endif
+
 static PyObject *
 instantiate_filter(uint32_t cardinality, uint16_t error_rate, const char *data, int datalen)
 {
-    PyObject *args = Py_BuildValue("(ids#)", cardinality, 1.0 / error_rate, data, datalen);
+    PyObject *args = Py_BuildValue(INSTANTIATE_ARGS_FORMAT, cardinality, 1.0 / error_rate, data, datalen);
     PyObject *obj = FilterType.tp_new(&FilterType, args, NULL);
     if (FilterType.tp_init(obj, args, NULL) < 0) {
         Py_DECREF(obj);
@@ -80,6 +93,11 @@ read_uint32(const char **buffer)
     return ret;
 }
 
+#if PY_MAJOR_VERSION >=3
+#define LOAD_ARGS_FORMAT "y#"
+#else
+#define LOAD_ARGS_FORMAT "s#"
+#endif
 
 /* serialization */
 static PyObject *
@@ -87,7 +105,7 @@ load(PyObject *self, PyObject *args)
 {
     const char *buffer;
     Py_ssize_t buflen;
-    if (!PyArg_ParseTuple(args, "s#", &buffer, &buflen)) {
+    if (!PyArg_ParseTuple(args, LOAD_ARGS_FORMAT, &buffer, &buflen)) {
         return NULL;
     }
 
@@ -120,9 +138,9 @@ dump(PyObject *self, PyObject *args)
     uint16_t checksum = compute_checksum((const char *)filter->_bloom_struct->bf, filter->_bloom_struct->bytes);
 
     struct serialized_filter_header header = {htons(checksum), htons(1.0 / filter->_bloom_struct->error), htonl(filter->_bloom_struct->entries)};
-    PyObject *serial_header = PyString_FromStringAndSize((const char *)&header, sizeof(struct serialized_filter_header));
-    PyObject *serial_data = PyString_FromStringAndSize((const char *)filter->_bloom_struct->bf, filter->_bloom_struct->bytes);
-    PyString_Concat(&serial_header, serial_data);
+    PyObject *serial_header = PyBytes_FromStringAndSize((const char *)&header, sizeof(struct serialized_filter_header));
+    PyObject *serial_data = PyBytes_FromStringAndSize((const char *)filter->_bloom_struct->bf, filter->_bloom_struct->bytes);
+    PyBytes_Concat(&serial_header, serial_data);
     Py_DECREF(serial_data);
     return serial_header;
 }
@@ -167,7 +185,7 @@ Filter_check(Filter *self, PyObject *args)
 static PyObject *
 Filter_buffer(Filter *self, PyObject *args)
 {
-    return PyString_FromStringAndSize((const char *)self->_bloom_struct->bf, self->_bloom_struct->bytes);
+    return PyBytes_FromStringAndSize((const char *)self->_bloom_struct->bf, self->_bloom_struct->bytes);
 }
 
 static PyMethodDef Filter_methods[] = {
@@ -180,12 +198,18 @@ static PyMethodDef Filter_methods[] = {
     {NULL}  /* Sentinel */
 };
 
+#if PY_MAJOR_VERSION >=3
+#define MY_Py_TYPE(t) Py_TYPE(t)
+#else
+#define MY_Py_TYPE(t) t->ob_type
+#endif
+
 static void
 Filter_dealloc(Filter* self)
 {
     bloom_free(self->_bloom_struct);
     free(self->_bloom_struct);
-    self->ob_type->tp_free((PyObject*)self);
+    MY_Py_TYPE(self)->tp_free((PyObject*)self);
 }
 
 static PyObject *
@@ -203,6 +227,12 @@ Filter_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     return (PyObject *)self;
 }
 
+#if PY_MAJOR_VERSION >=3
+#define INIT_ARGS_FORMAT "id|y#"
+#else
+#define INIT_ARGS_FORMAT "id|s#"
+#endif
+
 static int
 Filter_init(Filter *self, PyObject *args, PyObject *kwargs)
 {
@@ -211,7 +241,7 @@ Filter_init(Filter *self, PyObject *args, PyObject *kwargs)
     double error;
     const char *data = NULL;
     Py_ssize_t len;
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "id|s#", kwlist, &entries, &error, &data, &len)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, INIT_ARGS_FORMAT, kwlist, &entries, &error, &data, &len)) {
         return -1;
     }
     success = bloom_init(self->_bloom_struct, entries, error);
@@ -235,8 +265,17 @@ Filter_init(Filter *self, PyObject *args, PyObject *kwargs)
 #ifndef PyMODINIT_FUNC
 #define PyMODINIT_FUND void
 #endif
+
+#if PY_MAJOR_VERSION >=3
+#define INIT_ENTRY PyInit_inbloom
+#define RESULT(arg) arg
+#else
+#define INIT_ENTRY initinbloom
+#define RESULT(arg)
+#endif
+
 PyMODINIT_FUNC
-initinbloom(void)
+INIT_ENTRY(void)
 {
     PyObject *m;
     FilterType.tp_new = Filter_new;
@@ -244,13 +283,25 @@ initinbloom(void)
     FilterType.tp_methods = Filter_methods;
     FilterType.tp_dealloc = (destructor)Filter_dealloc;
     if (PyType_Ready(&FilterType) < 0)
-        return;
+        return RESULT(NULL);
 
+#if PY_MAJOR_VERSION >=3
+	static struct PyModuleDef moduledef = {
+    PyModuleDef_HEAD_INIT,
+        "inbloom",
+        module_docstring,
+        -1,
+        module_methods
+    };
+    m = PyModule_Create(&moduledef);
+#else
     m = Py_InitModule3("inbloom", module_methods, module_docstring);
+#endif
     Py_INCREF(&FilterType);
     PyModule_AddObject(m, "Filter", (PyObject *)&FilterType);
 
     InBloomError = PyErr_NewException("inbloom.error", NULL, NULL);
     Py_INCREF(InBloomError);
     PyModule_AddObject(m, "error", InBloomError);
+    return RESULT(m);
 }
